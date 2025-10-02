@@ -3,6 +3,7 @@ package crmfitness.project.service;
 import crmfitness.project.dto.request.ScheduleCreateDto;
 import crmfitness.project.dto.request.ScheduleUpdateDto;
 import crmfitness.project.model.*;
+import crmfitness.project.model.builder.ScheduleBuilder;
 import crmfitness.project.repository.ScheduleRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,7 @@ import static crmfitness.project.model.Training.TRAINING_DURATION;
 
 @Service
 @AllArgsConstructor
-public class ScheduleService {
+public class ScheduleService extends ScheduleBuilder {
 
     private final UserService userService;
     private final ScheduleRepository repository;
@@ -38,8 +39,14 @@ public class ScheduleService {
         Training training = trainingService.findTraining(scheduleCreateDto.getTrainingId())
                 .orElseThrow(() -> new RuntimeException("There is no training by id"));
 
-        return repository.save(new Schedule(scheduleCreateDto.getDateFrom(), scheduleCreateDto.getDateFrom() + TRAINING_DURATION,
-                trainer, training));
+        Schedule schedule = ScheduleBuilder.builder()
+                .setDateFrom(scheduleCreateDto.getDateFrom())
+                .setDateTo(scheduleCreateDto.getDateFrom() + TRAINING_DURATION)
+                .setTrainer(trainer)
+                .setTraining(training)
+                .build();
+
+        return repository.save(schedule);
     }
 
     private void checkScheduleDateFrom(long dateFrom) {

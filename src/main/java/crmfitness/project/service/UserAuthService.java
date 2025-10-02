@@ -4,6 +4,7 @@ import crmfitness.project.dto.request.UserLoginDto;
 import crmfitness.project.dto.request.UserRegistrationDto;
 import crmfitness.project.model.Role;
 import crmfitness.project.model.User;
+import crmfitness.project.model.builder.UserBuilder;
 import crmfitness.project.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -14,19 +15,20 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
-public class UserAuthService {
+public class UserAuthService extends UserBuilder {
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
 
     public User signup(UserRegistrationDto userRegistration, Role role) {
         try {
-            User user = new User();
-            user.setRole(role);
-            user.setEmail(userRegistration.getEmail());
-            user.setFirstName(userRegistration.getFirstName());
-            user.setLastName(userRegistration.getLastName());
-            user.setPassword(passwordEncoder.encode(userRegistration.getPassword()));
+            User user = UserBuilder.builder()
+                    .setRole(role)
+                    .setEmail(userRegistration.getEmail())
+                    .setFirstName(userRegistration.getFirstName())
+                    .setLastName(userRegistration.getLastName())
+                    .setPassword(passwordEncoder.encode(userRegistration.getPassword()))
+                    .build();
 
             return repository.save(user);
         } catch (DataIntegrityViolationException e) {
