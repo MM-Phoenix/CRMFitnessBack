@@ -9,4 +9,9 @@ public class WorkingSupportState implements SupportState {
     public String getMessage() {
         return "Admin is connecting...";
     }
+
+    @Override
+    public SupportStateType getType() {
+        return SupportStateType.WORKING;
+    }
 }

@@ -18,7 +18,7 @@ import static crmfitness.project.model.Training.TRAINING_DURATION;
 
 @Service
 @AllArgsConstructor
-public class ScheduleService extends ScheduleBuilder {
+public class ScheduleService {
 
     private final UserService userService;
     private final ScheduleRepository repository;
@@ -66,9 +66,8 @@ public class ScheduleService extends ScheduleBuilder {
 
     @Transactional
     public Schedule updateSchedule(ScheduleUpdateDto scheduleUpdateDto) {
-        Schedule schedule = repository.findExistsByDate(scheduleUpdateDto.getDateFrom()).orElseThrow(() -> {
-            throw new RuntimeException("There is no schedule");
-        });
+        Schedule schedule = repository.findExistsByDate(scheduleUpdateDto.getDateFrom())
+                .orElseThrow(() -> new RuntimeException("There is no schedule"));
         updateTrainer(schedule, scheduleUpdateDto.getTrainerId());
         updateTraining(schedule, scheduleUpdateDto.getTrainingId());
 
@@ -84,16 +83,16 @@ public class ScheduleService extends ScheduleBuilder {
 
     private void updateTraining(Schedule schedule, long trainingId) {
         if (schedule.getTraining().getId() != trainingId) {
-            Training training = trainingService.findTraining(trainingId).orElseThrow(() -> new RuntimeException("There is no training by id"));
+            Training training = trainingService.findTraining(trainingId)
+                    .orElseThrow(() -> new RuntimeException("There is no training by id"));
             schedule.setTraining(training);
         }
     }
 
     @Transactional
     public void deleteSchedule(long dateFrom) {
-        Schedule schedule = repository.findExistsByDate(dateFrom).orElseThrow(() -> {
-            throw new RuntimeException("There is no schedule");
-        });
+        Schedule schedule = repository.findExistsByDate(dateFrom)
+                .orElseThrow(() -> new RuntimeException("There is no schedule"));
 
         List<Long> userIds = schedule.getRegistrations().stream().map(ScheduleRegistration::getUserId).collect(Collectors.toList());
         userSubscriptionService.incrementUsersCount(userIds);
@@ -102,7 +101,8 @@ public class ScheduleService extends ScheduleBuilder {
     }
 
     public Schedule getScheduleForRegistration(long scheduleId, User user) {
-        Schedule schedule = repository.findById(scheduleId).orElseThrow(() -> new RuntimeException("There is no schedule on this time"));
+        Schedule schedule = repository.findById(scheduleId)
+                .orElseThrow(() -> new RuntimeException("There is no schedule on this time"));
 
         checkIfActive(schedule);
         checkIfClientTryToRegister(user);
@@ -112,7 +112,8 @@ public class ScheduleService extends ScheduleBuilder {
     }
 
     public Schedule getClientActiveSchedule(long scheduleId, User user) {
-        Schedule schedule = repository.findById(scheduleId).orElseThrow(() -> new RuntimeException("There is no schedule on this time"));
+        Schedule schedule = repository.findById(scheduleId)
+                .orElseThrow(() -> new RuntimeException("There is no schedule on this time"));
 
         checkIfActive(schedule);
         checkIfClientTryToRegister(user);

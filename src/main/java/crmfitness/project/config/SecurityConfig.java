@@ -32,8 +32,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers("/api/owner/**").hasAuthority(Role.OWNER.name());
                     request.requestMatchers("/api/admin/**").hasAnyAuthority(Role.OWNER.name(), Role.ADMIN.name());
-                    request.requestMatchers("/api/auth/**").permitAll();
-                    request.requestMatchers("/api/support/**").permitAll();
+//                    request.requestMatchers("/api/auth/**").permitAll();
+//                    request.requestMatchers("/api/support/**").permitAll();
+//                    request.requestMatchers("/api/ws/**").permitAll();
+                    request.requestMatchers("/**").permitAll();
                     request.anyRequest().authenticated();
                 }).httpBasic(Customizer.withDefaults());
 

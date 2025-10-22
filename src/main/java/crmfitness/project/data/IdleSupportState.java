@@ -9,4 +9,9 @@ public class IdleSupportState implements SupportState {
     public String getMessage() {
         return "We are closed now. Try again from 10:00 to 18:00.";
     }
+
+    @Override
+    public SupportStateType getType() {
+        return SupportStateType.IDLE;
+    }
 }
