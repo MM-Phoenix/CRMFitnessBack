@@ -43,7 +43,7 @@ public class WebSocketListener {
         } else {
             clientAdminChatService.addClient(session);
             String message = clientAdminChatService.assignAdminToUser(session);
-            webSocketService.send(session, new ChatMessage(message));
+            webSocketService.send(user, session, message);
         }
     }
 
@@ -51,7 +51,7 @@ public class WebSocketListener {
         User user = getUser(accessor);
         String session = accessor.getSessionId();
 
-        webSocketService.send(user, session, message);
+        webSocketService.send(user, session, message.getContent());
     }
 
     public void onDisconnect(StompHeaderAccessor accessor) {
