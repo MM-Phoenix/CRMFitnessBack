@@ -7,6 +7,10 @@ import crmfitness.project.model.User;
 import crmfitness.project.service.ClientAdminChatService;
 import crmfitness.project.service.UserService;
 import crmfitness.project.service.WebSocketService;
+import crmfitness.project.visitor.Admin;
+import crmfitness.project.visitor.Client;
+import crmfitness.project.visitor.UnregisteredClient;
+import crmfitness.project.visitor.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -18,6 +22,8 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class WebSocketListener {
 
+    private final Visitor visitor;
+
     private final JwtService jwtService;
     private final UserService userService;
 
@@ -25,8 +31,6 @@ public class WebSocketListener {
     private final ClientAdminChatService clientAdminChatService;
 
     public void onConnect(StompHeaderAccessor accessor) {
-        //Can use for other services. For example to display connections count.
-
         User user = getUser(accessor);
         String session = accessor.getSessionId();
 
@@ -39,8 +43,15 @@ public class WebSocketListener {
         String session = accessor.getSessionId();
 
         if (user != null && Role.ADMIN.equals(user.getRole())) {
+            new Admin(user, session).accept(visitor);
             clientAdminChatService.addAdmin(session, user);
         } else {
+            if (user != null) {
+                new Client(user, session).accept(visitor);
+            } else {
+                new UnregisteredClient(user, session).accept(visitor);
+            }
+
             clientAdminChatService.addClient(session);
             String message = clientAdminChatService.assignAdminToUser(session);
             webSocketService.send(user, session, message);
@@ -57,6 +68,7 @@ public class WebSocketListener {
     public void onDisconnect(StompHeaderAccessor accessor) {
         String session = accessor.getSessionId();
 
+        visitor.leave(session);
         clientAdminChatService.removeAdmin(session);
         clientAdminChatService.removeClient(session);
     }

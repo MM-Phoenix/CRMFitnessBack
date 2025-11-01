@@ -9,6 +9,7 @@ import crmfitness.project.dto.response.TrainingDto;
 import crmfitness.project.dto.response.UserDto;
 import crmfitness.project.model.*;
 import crmfitness.project.service.*;
+import crmfitness.project.visitor.Visitor;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin")
 public class AdminController {
 
+    private final Visitor visitor;
     private final UserService userService;
     private final ScheduleService scheduleService;
     private final UserAuthService userAuthService;
@@ -88,5 +90,10 @@ public class AdminController {
     public Map<Long, UserDto> getScheduleUsers() {
         List<ScheduleUser> users = userService.getScheduleUsers();
         return users.stream().collect(Collectors.toMap(ScheduleUser::getId, UserDto::new));
+    }
+
+    @GetMapping("/visitors")
+    public String getVisitors() {
+        return visitor.getVisitors();
     }
 }
