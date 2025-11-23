@@ -1,8 +1,8 @@
 package crmfitness.project.socket;
 
 import crmfitness.project.data.ChatMessage;
+import crmfitness.project.data.SocketKey;
 import crmfitness.project.jwt.service.JwtService;
-import crmfitness.project.model.Role;
 import crmfitness.project.model.User;
 import crmfitness.project.service.ClientAdminChatService;
 import crmfitness.project.service.UserService;
@@ -16,6 +16,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import static crmfitness.project.model.Role.*;
 
 @Log4j2
 @Component
@@ -40,11 +42,13 @@ public class WebSocketListener {
 
     public void onSubscribe(StompHeaderAccessor accessor) {
         User user = getUser(accessor);
+        String urlPath = urlPath(accessor);
         String session = accessor.getSessionId();
 
-        if (user != null && Role.ADMIN.equals(user.getRole())) {
+        if (user != null &&
+                (OWNER.equals(user.getRole()) || ADMIN.equals(user.getRole()) || TRAINER.equals(user.getRole()))) {
             new Admin(user, session).accept(visitor);
-            clientAdminChatService.addAdmin(session, user);
+            clientAdminChatService.addAdmin(session, new SocketKey(session, urlPath));
         } else {
             if (user != null) {
                 new Client(user, session).accept(visitor);
@@ -52,9 +56,8 @@ public class WebSocketListener {
                 new UnregisteredClient(user, session).accept(visitor);
             }
 
-            clientAdminChatService.addClient(session);
-            String message = clientAdminChatService.assignAdminToUser(session);
-            webSocketService.send(user, session, message);
+            clientAdminChatService.addClient(session, new SocketKey(session, urlPath));
+            clientAdminChatService.assignAdminToUser(session);
         }
     }
 
@@ -73,8 +76,7 @@ public class WebSocketListener {
         clientAdminChatService.removeClient(session);
     }
 
-
-    public User getUser(StompHeaderAccessor accessor) {
+    private User getUser(StompHeaderAccessor accessor) {
         String authHeader = accessor.getFirstNativeHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -90,5 +92,15 @@ public class WebSocketListener {
             }
         }
         return null;
+    }
+
+    private String urlPath(StompHeaderAccessor accessor) {
+        String urlPath = accessor.getFirstNativeHeader("urlPath");
+
+        if(urlPath == null) {
+            throw new RuntimeException("Illegal url path");
+        }
+
+        return urlPath;
     }
 }
